@@ -36,7 +36,7 @@ void IRAM_ATTR readEncoderISR()
 }
 
 void displayForMinutes(int m) {
-  display.setCursor(0, 10);
+  display.setCursor(0, 20);
   display.println("Pihole active...");
   display.println("");
   display.print("Disable for ");
@@ -45,7 +45,7 @@ void displayForMinutes(int m) {
 }
 
 void displayDisabled(int seconds) {
-  display.setCursor(0, 10);
+  display.setCursor(0, 20);
   display.println("Pihole DISABLED!!!");
   display.println("");
   display.println("Resuming in... ");
@@ -56,9 +56,13 @@ void displayDisabled(int seconds) {
 String disablePiHole() {
   Serial.println("Attempting to disable pi hole");
   HTTPClient http;
+  http.setReuse(false); 
 
   // Your IP address with path or Domain name with URL path 
-  String uri = "http://192.168.1.101/admin/api.php?disable=" + minutes + String("&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247");
+  int seconds = minutes * 60;
+  String root = "http://192.168.1.101/admin/api.php?disable=";
+  String with_time = root + seconds;
+  String uri = with_time + "&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
   Serial.print("GET ");
   Serial.println(uri);
   http.begin(uri);
@@ -85,6 +89,7 @@ String disablePiHole() {
 String enablePiHole() {
   Serial.println("Attempting to enable pi hole");
   HTTPClient http;
+  http.setReuse(false); 
 
   String uri = "http://192.168.1.101/admin/api.php?enable&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
   Serial.print("GET ");
@@ -156,7 +161,7 @@ void setup() {
   Serial.println(F("Display initialized!"));
   display.clearDisplay();
 
-  display.setFont(&FreeSerif9pt7b);
+  //display.setFont(&FreeSerif9pt7b);
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
