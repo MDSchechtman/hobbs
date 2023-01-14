@@ -3,11 +3,11 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "AiEsp32RotaryEncoder.h"
-#include <Arduino.h>
-// web server
 #include <WiFi.h>
 #include <HTTPClient.h>
-
+#include <Arduino.h>
+#include <Fonts/FreeMonoBoldOblique12pt7b.h>
+#include <Fonts/FreeSerif9pt7b.h>
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
@@ -36,6 +36,7 @@ void IRAM_ATTR readEncoderISR()
 }
 
 void displayForMinutes(int m) {
+  display.setCursor(0, 10);
   display.println("Pihole active...");
   display.println("");
   display.print("Disable for ");
@@ -44,6 +45,7 @@ void displayForMinutes(int m) {
 }
 
 void displayDisabled(int seconds) {
+  display.setCursor(0, 10);
   display.println("Pihole DISABLED!!!");
   display.println("");
   display.println("Resuming in... ");
@@ -52,11 +54,14 @@ void displayDisabled(int seconds) {
 }
 
 String disablePiHole() {
+  Serial.println("Attempting to disable pi hole");
   HTTPClient http;
 
   // Your IP address with path or Domain name with URL path 
-  String serverName = "http://192.168.1.101/admin/api.php?disable=" + minutes + String("&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247");
-  http.begin(serverName.c_str());
+  String uri = "http://192.168.1.101/admin/api.php?disable=" + minutes + String("&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247");
+  Serial.print("GET ");
+  Serial.println(uri);
+  http.begin(uri);
 
   // Send HTTP POST request
   int httpResponseCode = http.GET();
@@ -78,10 +83,14 @@ String disablePiHole() {
 }
 
 String enablePiHole() {
+  Serial.println("Attempting to enable pi hole");
   HTTPClient http;
 
+  String uri = "http://192.168.1.101/admin/api.php?enable&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
+  Serial.print("GET ");
+  Serial.println(uri);
   // Your IP address with path or Domain name with URL path 
-  http.begin("http://192.168.1.101/admin/api.php?enable&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247");
+  http.begin(uri);
 
   // Send HTTP POST request
   int httpResponseCode = http.GET();
@@ -118,6 +127,10 @@ void rotary_onButtonClick()
   }
 }
 
+void connect_wifi() {
+
+}
+
 void setup() {
   Serial.begin(9600);
 
@@ -143,6 +156,7 @@ void setup() {
   Serial.println(F("Display initialized!"));
   display.clearDisplay();
 
+  display.setFont(&FreeSerif9pt7b);
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
@@ -160,11 +174,89 @@ void setup() {
   displayForMinutes(rotaryEncoder.readEncoder());
 }
 
+void draw_battery() {
+  display.setCursor(0, 0);
+  display.print("69%");
+}
+
+wl_status_t get_and_draw_wifi_status() {
+  long rssi = WiFi.RSSI();
+  // Serial.print("RSSI: ");
+  // Serial.print(rssi);
+
+  wl_status_t status = WiFi.status();
+  // Serial.print(" WiFi Status: ");
+  // Serial.print(status);
+  // Serial.println();
+  
+  switch(WiFi.status()) {
+    case WL_CONNECTED:
+      if (rssi >= -55) { 
+        display.fillRect(102,7,4,1,WHITE);
+        display.fillRect(107,6,4,2,WHITE);
+        display.fillRect(112,4,4,4,WHITE);
+        display.fillRect(117,2,4,6,WHITE);
+        display.fillRect(122,0,4,8,WHITE);
+      } else if (rssi < -55 & rssi > -65) {
+        display.fillRect(102,7,4,1,WHITE);
+        display.fillRect(107,6,4,2,WHITE);
+        display.fillRect(112,4,4,4,WHITE);
+        display.fillRect(117,2,4,6,WHITE);
+        display.drawRect(122,0,4,8,WHITE);
+      } else if (rssi < -75 & rssi > -85) {
+        display.fillRect(102,8,4,1,WHITE);
+        display.fillRect(107,6,4,2,WHITE);
+        display.drawRect(112,4,4,4,WHITE);
+        display.drawRect(117,2,4,6,WHITE);
+        display.drawRect(122,0,4,8,WHITE);
+      } else if (rssi < -85 & rssi > -96) {
+        display.fillRect(102,8,4,1,WHITE);
+        display.drawRect(107,6,4,2,WHITE);
+        display.drawRect(112,4,4,4,WHITE);
+        display.drawRect(117,2,4,6,WHITE);
+        display.drawRect(122,0,4,8,WHITE);
+      } else {
+        display.drawRect(102,8,4,1,WHITE);
+        display.drawRect(107,6,4,2,WHITE);
+        display.drawRect(112,4,4,4,WHITE);
+        display.drawRect(117,2,4,6,WHITE);
+        display.drawRect(122,0,4,8,WHITE);
+      }
+      break;
+    case WL_DISCONNECTED:
+    case WL_CONNECTION_LOST:
+      display.setCursor(120, 0);
+      display.print("D/C");
+      break;
+    case WL_IDLE_STATUS:
+      display.setCursor(120, 0);
+      display.print("IDLE");
+      break;
+    case WL_NO_SSID_AVAIL:
+      display.setCursor(120, 0);
+      display.print("SSID");
+      break;
+    default:
+      display.setCursor(120, 0);
+      display.print("OOPS");
+      break;
+  }
+
+  return status;
+}
+
 void loop() {
   display.clearDisplay();
   display.setCursor(0, 0);
+  draw_battery();
+  wl_status_t wifiStatus = get_and_draw_wifi_status();
+  if (wifiStatus != WL_CONNECTED) {
+    Serial.println("Attempting to reconnect...");
+    WiFi.reconnect();
+  }
   
   if (rotaryEncoder.isEncoderButtonClicked()) {
+    Serial.println("Button clicked!");
     pihole_disabled = !pihole_disabled;
     rotary_onButtonClick();
     countdown = minutes * 60 * 1000; // 100ms ticks
