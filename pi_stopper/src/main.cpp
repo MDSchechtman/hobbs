@@ -57,15 +57,14 @@ String disablePiHole() {
   Serial.println("Attempting to disable pi hole");
   HTTPClient http;
 
-  // Your IP address with path or Domain name with URL path 
   String uri = "http://192.168.1.101/admin/api.php?disable=" + minutes + String("&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247");
   Serial.print("GET ");
   Serial.println(uri);
-  http.begin(uri);
 
-  // Send HTTP POST request
+  http.begin(uri);
   int httpResponseCode = http.GET();
 
+  // not using
   String payload = "{}"; 
 
   if (httpResponseCode>0) {
@@ -89,12 +88,11 @@ String enablePiHole() {
   String uri = "http://192.168.1.101/admin/api.php?enable&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
   Serial.print("GET ");
   Serial.println(uri);
-  // Your IP address with path or Domain name with URL path 
-  http.begin(uri);
 
-  // Send HTTP POST request
+  http.begin(uri);
   int httpResponseCode = http.GET();
 
+  // not using
   String payload = "{}"; 
 
   if (httpResponseCode>0) {
@@ -125,10 +123,6 @@ void rotary_onButtonClick()
     displayForMinutes(5);
     minutes = 5;
   }
-}
-
-void connect_wifi() {
-
 }
 
 void setup() {
@@ -174,6 +168,8 @@ void setup() {
   displayForMinutes(rotaryEncoder.readEncoder());
 }
 
+// not using a battery so just draw the nice number
+// Put something else in this corner? idk.
 void draw_battery() {
   display.setCursor(0, 0);
   display.print("69%");
@@ -189,6 +185,7 @@ wl_status_t get_and_draw_wifi_status() {
   // Serial.print(status);
   // Serial.println();
   
+  // draw the wifi bars
   switch(WiFi.status()) {
     case WL_CONNECTED:
       if (rssi >= -55) { 
@@ -259,12 +256,13 @@ void loop() {
     Serial.println("Button clicked!");
     pihole_disabled = !pihole_disabled;
     rotary_onButtonClick();
-    countdown = minutes * 60 * 1000; // 100ms ticks
+    countdown = minutes * 60 * 1000; 
   }
 
   if (pihole_disabled && countdown > 0) {
     displayDisabled(countdown/1000);
     countdown -= 100;
+    // not doing anything so slow down to 100ms between loops
     delay(100);
   }
 
