@@ -57,7 +57,7 @@ String disablePiHole() {
   Serial.println("Attempting to disable pi hole");
   HTTPClient http;
 
-  String uri = "http://192.168.1.101/admin/api.php?disable=" + minutes + String("&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247");
+  String uri = "http://192.168.1.101/admin/api.php?disable=" + minutes + String("&auth=<YOUR KEY>");
   Serial.print("GET ");
   Serial.println(uri);
 
@@ -85,7 +85,7 @@ String enablePiHole() {
   Serial.println("Attempting to enable pi hole");
   HTTPClient http;
 
-  String uri = "http://192.168.1.101/admin/api.php?enable&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
+  String uri = "http://192.168.1.101/admin/api.php?enable&auth=<YOUR KEY>";
   Serial.print("GET ");
   Serial.println(uri);
 
