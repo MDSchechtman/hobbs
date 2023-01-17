@@ -24,8 +24,9 @@ AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, 
 int minutes = 0;
 
 // web server
-const char* ssid = "starknet";
-const char* password = "starknet";
+const char* ssid = "ssid";
+const char* password = "password";
+const char* pihole_access_token = "<YOUR KEY>";
 
 bool pihole_disabled = false;
 int countdown = 0;
@@ -59,9 +60,9 @@ String disablePiHole() {
   http.setReuse(false); 
 
   int seconds = minutes * 60;
-  String root = "http://192.168.1.101/admin/api.php?disable=";
-  String with_time = root + seconds;
-  String uri = with_time + "&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
+  String part1 = "http://192.168.1.101/admin/api.php?disable=" + seconds;
+  String part2 = part1 + "&auth=" + pihole_access_token;
+  String uri = part2;
   Serial.print("GET ");
   Serial.println(uri);
 
@@ -92,7 +93,9 @@ String enablePiHole() {
   HTTPClient http;
   http.setReuse(false); 
 
-  String uri = "http://192.168.1.101/admin/api.php?enable&auth=<YOUR KEY>";
+  String part1 = "http://192.168.1.101/admin/api.php?enable";
+  String part2 = part1 + "&auth=" + pihole_access_token;
+  String uri = part2;
   Serial.print("GET ");
   Serial.println(uri);
 
