@@ -8,6 +8,9 @@
 #include <Arduino.h>
 #include <Fonts/FreeMonoBoldOblique12pt7b.h>
 #include <Fonts/FreeSerif9pt7b.h>
+// must be created with secrets
+#include "credentials.h"
+
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
@@ -22,11 +25,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define ROTARY_ENCODER_STEPS 4
 AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, -1, ROTARY_ENCODER_STEPS);
 int minutes = 0;
-
-// web server
-const char* ssid = "ssid";
-const char* password = "password";
-const char* pihole_access_token = "<YOUR KEY>";
 
 bool pihole_disabled = false;
 int countdown = 0;
@@ -61,7 +59,7 @@ String disablePiHole() {
 
   int seconds = minutes * 60;
   String part1 = "http://192.168.1.101/admin/api.php?disable=" + seconds;
-  String part2 = part1 + "&auth=" + pihole_access_token;
+  String part2 = part1 + "&auth=" + PIHOLE_TOKEN;
   String uri = part2;
   Serial.print("GET ");
   Serial.println(uri);
@@ -94,7 +92,7 @@ String enablePiHole() {
   http.setReuse(false); 
 
   String part1 = "http://192.168.1.101/admin/api.php?enable";
-  String part2 = part1 + "&auth=" + pihole_access_token;
+  String part2 = part1 + "&auth=" + PIHOLE_TOKEN;
   String uri = part2;
   Serial.print("GET ");
   Serial.println(uri);
@@ -145,7 +143,7 @@ void setup() {
   Serial.begin(9600);
 
   // wifi
-  WiFi.begin(ssid, password);
+  WiFi.begin(WIFI_SSID, WIFI_PW);
   Serial.println("Connecting");
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
