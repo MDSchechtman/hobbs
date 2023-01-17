@@ -28,6 +28,8 @@ int minutes = 0;
 
 bool pihole_disabled = false;
 int countdown = 0;
+long last_interaction = 0;
+bool dimmed = false;
 
 void IRAM_ATTR readEncoderISR()
 {
@@ -35,7 +37,7 @@ void IRAM_ATTR readEncoderISR()
 }
 
 void displayForMinutes(int m) {
-  display.setCursor(0, 10);
+  display.setCursor(0, 20);
   display.println("Pihole active...");
   display.println("");
   display.print("Disable for ");
@@ -44,7 +46,7 @@ void displayForMinutes(int m) {
 }
 
 void displayDisabled(int seconds) {
-  display.setCursor(0, 10);
+  display.setCursor(0, 20);
   display.println("Pihole DISABLED!!!");
   display.println("");
   display.println("Resuming in... ");
@@ -58,9 +60,11 @@ String disablePiHole() {
   http.setReuse(false); 
 
   int seconds = minutes * 60;
-  String part1 = "http://192.168.1.101/admin/api.php?disable=" + seconds;
-  String part2 = part1 + "&auth=" + PIHOLE_TOKEN;
-  String uri = part2;
+  String part1 = "http://192.168.1.101/admin/api.php?disable=";
+  String part2 = part1 + seconds;
+  String part3 = part2 + "&auth=";
+  String part4 = part3 + PIHOLE_TOKEN;
+  String uri = part4;
   Serial.print("GET ");
   Serial.println(uri);
 
@@ -164,7 +168,7 @@ void setup() {
   Serial.println(F("Display initialized!"));
   display.clearDisplay();
 
-  display.setFont(&FreeSerif9pt7b);
+  //display.setFont(&FreeSerif9pt7b);
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
@@ -175,7 +179,7 @@ void setup() {
 
   rotaryEncoder.begin();
   rotaryEncoder.setup(readEncoderISR);
-  rotaryEncoder.setBoundaries(0, 61, true); //minValue, maxValue, circleValues true|false (when max go to min and vice versa)
+  rotaryEncoder.setBoundaries(1, 61, true); //minValue, maxValue, circleValues true|false (when max go to min and vice versa)
   rotaryEncoder.setAcceleration(10);
   rotaryEncoder.setEncoderValue(5);
 
@@ -268,13 +272,15 @@ void loop() {
     pihole_disabled = !pihole_disabled;
     rotary_onButtonClick();
     countdown = minutes * 60 * 1000; 
+
+    last_interaction = millis();
+    display.dim(false);
+    dimmed = false;
   }
 
   if (pihole_disabled && countdown > 0) {
     displayDisabled(countdown/1000);
     countdown -= 100;
-    // not doing anything so slow down to 100ms between loops
-    delay(100);
   }
 
   if (countdown < 0) {
@@ -284,9 +290,24 @@ void loop() {
   if (!pihole_disabled) {
     if (rotaryEncoder.encoderChanged()) {
       minutes = rotaryEncoder.readEncoder();
+      last_interaction = millis();
+      display.dim(false);
+      dimmed = false;
     }
     displayForMinutes(minutes);
   }
 
   display.display();
+
+  if (!dimmed && millis() - last_interaction > 5000) {
+    display.dim(true);
+    Serial.println("Dimming display");
+    dimmed = true;
+  }
+
+  if (pihole_disabled) {
+    delay(100);
+  } else if (dimmed) {
+    delay(250);
+  }
 }
