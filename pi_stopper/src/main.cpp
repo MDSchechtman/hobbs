@@ -36,7 +36,7 @@ void IRAM_ATTR readEncoderISR()
 }
 
 void displayForMinutes(int m) {
-  display.setCursor(0, 20);
+  display.setCursor(0, 10);
   display.println("Pihole active...");
   display.println("");
   display.print("Disable for ");
@@ -45,7 +45,7 @@ void displayForMinutes(int m) {
 }
 
 void displayDisabled(int seconds) {
-  display.setCursor(0, 20);
+  display.setCursor(0, 10);
   display.println("Pihole DISABLED!!!");
   display.println("");
   display.println("Resuming in... ");
@@ -58,18 +58,19 @@ String disablePiHole() {
   HTTPClient http;
   http.setReuse(false); 
 
-  // Your IP address with path or Domain name with URL path 
   int seconds = minutes * 60;
   String root = "http://192.168.1.101/admin/api.php?disable=";
   String with_time = root + seconds;
   String uri = with_time + "&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
   Serial.print("GET ");
   Serial.println(uri);
+
   http.begin(uri);
 
-  // Send HTTP POST request
+  // Send HTTP request
   int httpResponseCode = http.GET();
 
+  // not using
   String payload = "{}"; 
 
   if (httpResponseCode>0) {
@@ -91,15 +92,16 @@ String enablePiHole() {
   HTTPClient http;
   http.setReuse(false); 
 
-  String uri = "http://192.168.1.101/admin/api.php?enable&auth=cc82c777314048eb186cf0721cb0279b7862fd9303b33ac1cfad863a0e817247";
+  String uri = "http://192.168.1.101/admin/api.php?enable&auth=<YOUR KEY>";
   Serial.print("GET ");
   Serial.println(uri);
-  // Your IP address with path or Domain name with URL path 
+
   http.begin(uri);
 
-  // Send HTTP POST request
+  // Send HTTP request
   int httpResponseCode = http.GET();
 
+  // not using
   String payload = "{}"; 
 
   if (httpResponseCode>0) {
@@ -161,7 +163,7 @@ void setup() {
   Serial.println(F("Display initialized!"));
   display.clearDisplay();
 
-  //display.setFont(&FreeSerif9pt7b);
+  display.setFont(&FreeSerif9pt7b);
   display.setTextSize(1);
   display.setTextColor(WHITE);
   display.setCursor(0, 0);
@@ -264,12 +266,13 @@ void loop() {
     Serial.println("Button clicked!");
     pihole_disabled = !pihole_disabled;
     rotary_onButtonClick();
-    countdown = minutes * 60 * 1000; // 100ms ticks
+    countdown = minutes * 60 * 1000; 
   }
 
   if (pihole_disabled && countdown > 0) {
     displayDisabled(countdown/1000);
     countdown -= 100;
+    // not doing anything so slow down to 100ms between loops
     delay(100);
   }
 
