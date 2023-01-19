@@ -30,6 +30,7 @@ bool pihole_disabled = false;
 int countdown = 0;
 long last_interaction = 0;
 bool dimmed = false;
+int default_minutes = 1;
 
 void IRAM_ATTR readEncoderISR()
 {
@@ -134,8 +135,8 @@ void rotary_onButtonClick()
     disablePiHole();
   } else {
     enablePiHole();
-    displayForMinutes(5);
-    minutes = 5;
+    displayForMinutes(default_minutes);
+    minutes = default_minutes;
   }
 }
 
@@ -283,11 +284,11 @@ void loop() {
     countdown -= 100;
   }
 
-  if (countdown < 0) {
+  if (pihole_disabled && countdown <= 0) {
     pihole_disabled = false;
     enablePiHole();
-    displayForMinutes(5);
-    minutes = 5;
+    displayForMinutes(default_minutes);
+    minutes = default_minutes;
   }
 
   if (!pihole_disabled) {
