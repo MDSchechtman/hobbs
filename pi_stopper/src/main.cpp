@@ -19,9 +19,9 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Rotary Encoder
-#define ROTARY_ENCODER_A_PIN 27
-#define ROTARY_ENCODER_B_PIN 26
-#define ROTARY_ENCODER_BUTTON_PIN 25
+#define ROTARY_ENCODER_A_PIN 27 // DT (double check this)
+#define ROTARY_ENCODER_B_PIN 26 // CLK (double check this)
+#define ROTARY_ENCODER_BUTTON_PIN 25 // button
 #define ROTARY_ENCODER_STEPS 4
 AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, -1, ROTARY_ENCODER_STEPS);
 int minutes = 0;
@@ -216,19 +216,19 @@ wl_status_t get_and_draw_wifi_status() {
         display.fillRect(117,2,4,6,WHITE);
         display.drawRect(122,0,4,8,WHITE);
       } else if (rssi < -75 & rssi > -85) {
-        display.fillRect(102,8,4,1,WHITE);
+        display.fillRect(102,7,4,1,WHITE);
         display.fillRect(107,6,4,2,WHITE);
         display.drawRect(112,4,4,4,WHITE);
         display.drawRect(117,2,4,6,WHITE);
         display.drawRect(122,0,4,8,WHITE);
       } else if (rssi < -85 & rssi > -96) {
-        display.fillRect(102,8,4,1,WHITE);
+        display.fillRect(102,7,4,1,WHITE);
         display.drawRect(107,6,4,2,WHITE);
         display.drawRect(112,4,4,4,WHITE);
         display.drawRect(117,2,4,6,WHITE);
         display.drawRect(122,0,4,8,WHITE);
       } else {
-        display.drawRect(102,8,4,1,WHITE);
+        display.drawRect(102,7,4,1,WHITE);
         display.drawRect(107,6,4,2,WHITE);
         display.drawRect(112,4,4,4,WHITE);
         display.drawRect(117,2,4,6,WHITE);
@@ -285,6 +285,9 @@ void loop() {
 
   if (countdown < 0) {
     pihole_disabled = false;
+    enablePiHole();
+    displayForMinutes(5);
+    minutes = 5;
   }
 
   if (!pihole_disabled) {
