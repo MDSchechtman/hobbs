@@ -44,7 +44,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 void setup_display()
 {
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C, true))
   {
     Serial.println(F("SSD1306 allocation failed"));
     for (;;)
@@ -99,7 +99,7 @@ void rotate(ESPRotary &r)
     }
     
     // loop around
-    rgb[current_color] == rgb[current_color] % 255;
+    rgb[current_color] = rgb[current_color] % 255;
   }
   Serial.println(r.getPosition());
 }
@@ -142,12 +142,14 @@ void setup_encoder()
 
 void setup()
 {
-  delay(3000);
-  Serial.begin(115200);
+  Serial.begin(9600);
+  Serial.println("Alive...");
 
   setup_led();
   setup_display();
   setup_encoder();
+
+  Serial.println("Setup complete.");
 }
 
 void draw_header()
@@ -239,4 +241,6 @@ void loop()
   draw_header();
   draw_body();
   display.display();
+
+  delay(100);
 }
