@@ -101,16 +101,20 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
     }
 
     // loop around
-    if (current_color > 2) {
+    if (current_color > 2)
+    {
       current_color = 0;
-    } else if (current_color < 0) {
+    }
+    else if (current_color < 0)
+    {
       current_color = 2;
     }
   }
-  else 
+  else
   {
     int delta = 1;
-    if (rpm > 200) {
+    if (rpm > 200)
+    {
       delta = 10;
     }
 
@@ -123,9 +127,12 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
       rgb[current_color] -= delta;
     }
 
-    if (rgb[current_color] > 255) {
+    if (rgb[current_color] > 255)
+    {
       rgb[current_color] = 0;
-    } else if (rgb[current_color] < 0) {
+    }
+    else if (rgb[current_color] < 0)
+    {
       rgb[current_color] = 255;
     }
   }
@@ -157,6 +164,41 @@ void setup_encoder()
   rotary_button.setLongClickHandler(resetPosition);
 }
 
+#define MISC_BUTTON_PIN 10
+Button2 misc_button;
+
+void misc_button_click(Button2 &btn)
+{
+  Serial.println(F("misc button click"));
+  if (!color_selected)
+  {
+    current_color++;
+
+    // loop around
+    if (current_color > 2)
+    {
+      current_color = 0;
+    }
+    else if (current_color < 0)
+    {
+      current_color = 2;
+    }
+  }
+}
+
+void misc_button_long_click(Button2 &btn)
+{
+
+  color_selected = true;
+}
+
+void setup_misc_button()
+{
+  misc_button.begin(MISC_BUTTON_PIN, INPUT_PULLUP);
+  misc_button.setTapHandler(misc_button_click);
+  misc_button.setLongClickDetectedHandler(misc_button_long_click);
+}
+
 void setup()
 {
   Serial.begin(9600);
@@ -167,6 +209,7 @@ void setup()
   setup_display();
   setup_led();
   setup_encoder();
+  setup_misc_button();
 
   Serial.println(F("Setup complete."));
 }
@@ -182,7 +225,7 @@ void draw_header()
   display.print(rgb[1]);
   display.print(", ");
   display.print(rgb[2]);
-  display.println(")");  
+  display.println(")");
 }
 
 void draw_body()
@@ -248,12 +291,14 @@ void draw_body()
 void loop()
 {
   rotary_button.loop();
+  misc_button.loop();
 
   static int pos = 0;
   encoder->tick(); // just call tick() to check the state.
 
   int newPos = encoder->getPosition();
-  if (pos != newPos) {
+  if (pos != newPos)
+  {
     pos = newPos;
     int rpm = encoder->getRPM();
     Serial.println(rpm);
