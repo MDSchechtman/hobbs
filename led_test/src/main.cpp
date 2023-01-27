@@ -161,7 +161,7 @@ void setup_encoder()
 
   rotary_button.begin(ROTARY_BUTTON_PIN);
   rotary_button.setTapHandler(click);
-  rotary_button.setLongClickHandler(resetPosition);
+  rotary_button.setLongClickDetectedHandler(resetPosition);
 }
 
 #define MISC_BUTTON_PIN 10
@@ -188,8 +188,7 @@ void misc_button_click(Button2 &btn)
 
 void misc_button_long_click(Button2 &btn)
 {
-
-  color_selected = true;
+  color_selected = !color_selected;
 }
 
 void setup_misc_button()
