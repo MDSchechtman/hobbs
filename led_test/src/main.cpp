@@ -114,7 +114,7 @@ void showDirection(ESPRotary &r)
 void click(Button2 &btn)
 {
   color_selected = !color_selected;
-  Serial.println("Click!");
+  Serial.println(F("Click!"));
 }
 
 // long click
@@ -125,7 +125,7 @@ void resetPosition(Button2 &btn)
   rgb[0] = 0;
   rgb[1] = 0;
   rgb[2] = 0;
-  Serial.println("Reset!");
+  Serial.println(F("Reset!"));
 }
 
 void setup_encoder()
@@ -143,13 +143,15 @@ void setup_encoder()
 void setup()
 {
   Serial.begin(9600);
-  Serial.println("Alive...");
+  Serial.println(F("Alive..."));
 
-  setup_led();
+  delay(1000);
+
   setup_display();
+  setup_led();
   setup_encoder();
 
-  Serial.println("Setup complete.");
+  Serial.println(F("Setup complete."));
 }
 
 void draw_header()
@@ -174,33 +176,33 @@ void draw_body()
   {
     if (current_color == 0)
     {
-      display.print("> ");
+      display.print(F("> "));
     }
     else
     {
-      display.print("  ");
+      display.print(F("  "));
     }
-    display.println("Red");
+    display.println(F("Red"));
 
     if (current_color == 1)
     {
-      display.print("> ");
+      display.print(F("> "));
     }
     else
     {
-      display.print("  ");
+      display.print(F("  "));
     }
-    display.println("Green");
+    display.println(F("Green"));
 
     if (current_color == 2)
     {
-      display.print("> ");
+      display.print(F("> "));
     }
     else
     {
       display.print("  ");
     }
-    display.println("Blue");
+    display.println(F("Blue"));
   }
   else
   {
@@ -208,15 +210,15 @@ void draw_body()
     switch (current_color)
     {
     case 0:
-      display.print("Red: ");
+      display.print(F("Red: "));
       display.println(rgb[0]);
       break;
     case 1:
-      display.print("Green: ");
+      display.print(F("Green: "));
       display.println(rgb[1]);
       break;
     case 2:
-      display.print("Blue: ");
+      display.print(F("Blue: "));
       display.println(rgb[2]);
       break;
     default:
