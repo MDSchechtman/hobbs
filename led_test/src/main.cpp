@@ -91,18 +91,13 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
 {
   if (!color_selected)
   {
-    int delta = 1;
-    if (rpm > 150) {
-      delta = 10;
-    }
-
     if (direction == RotaryEncoder::Direction::CLOCKWISE)
     {
-      current_color += delta;
+      current_color++;
     }
     else if (direction == RotaryEncoder::Direction::COUNTERCLOCKWISE)
     {
-      current_color -= delta;
+      current_color--;
     }
 
     // loop around
@@ -114,13 +109,18 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
   }
   else 
   {
+    int delta = 1;
+    if (rpm > 150) {
+      delta = 10;
+    }
+
     if (direction == RotaryEncoder::Direction::CLOCKWISE)
     {
-      rgb[current_color]++;
+      rgb[current_color] += delta;
     }
     else if (direction == RotaryEncoder::Direction::COUNTERCLOCKWISE)
     {
-      rgb[current_color]--;
+      rgb[current_color] -= delta;
     }
 
     if (rgb[current_color] > 255) {
