@@ -3,9 +3,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "Button2.h"
-#include "ESPRotary.h"
 #include "FastLED.h"
 #include <Arduino.h>
+#include <RotaryEncoder.h>
 
 // my stuff
 int current_color = 0; // 0 - R, 1 - G, 2 - B
@@ -16,7 +16,7 @@ boolean color_selected = false;
 #define NUM_LEDS 10
 #define LED_TYPE WS2812B
 #define COLOR_ORDER GRB
-#define DATA_PIN 3
+#define DATA_PIN 8
 // #define CLK_PIN 4
 #define VOLTS 5
 #define MAX_MA 1500
@@ -64,22 +64,38 @@ void setup_display()
 }
 
 // Rotary Encoder
-#define ROTARY_PIN1 11
-#define ROTARY_PIN2 12
-#define BUTTON_PIN 13
-#define CLICKS_PER_STEP 2
-ESPRotary rotary;
+#define ROTARY_PIN1 2
+#define ROTARY_PIN2 3
+#define ROTARY_BUTTON_PIN 13
 Button2 rotary_button;
+RotaryEncoder *encoder = nullptr;
+#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO_EVERY)
+// This interrupt routine will be called on any change of one of the input signals
+void checkPosition()
+{
+  encoder->tick(); // just call tick() to check the state.
+}
 
-void rotate(ESPRotary &r)
+#elif defined(ESP8266)
+/**
+ * @brief The interrupt service routine will be called on any change of one of the input signals.
+ */
+IRAM_ATTR void checkPosition()
+{
+  encoder->tick(); // just call tick() to check the state.
+}
+
+#endif
+
+void handle_rotate(int position, RotaryEncoder::Direction direction)
 {
   if (!color_selected)
   {
-    if (r.getDirection() == right)
+    if (direction == RotaryEncoder::Direction::CLOCKWISE)
     {
       current_color++;
     }
-    else
+    else if (direction == RotaryEncoder::Direction::COUNTERCLOCKWISE)
     {
       current_color--;
     }
@@ -89,22 +105,21 @@ void rotate(ESPRotary &r)
   }
   else 
   {
-    if (r.getDirection() == right)
+    if (direction == RotaryEncoder::Direction::CLOCKWISE)
     {
       rgb[current_color]++;
     }
-    else
+    else if (direction == RotaryEncoder::Direction::COUNTERCLOCKWISE)
     {
       rgb[current_color]--;
     }
-  }
-  Serial.println(r.getPosition());
-}
 
-// on left or right rotation
-void showDirection(ESPRotary &r)
-{
-  Serial.println(r.directionToString(r.getDirection()));
+    if (rgb[current_color] > 255) {
+      rgb[current_color] = 255;
+    } else if (rgb[current_color] < 0) {
+      rgb[current_color] = 0;
+    }
+  }
 }
 
 // single click
@@ -117,7 +132,6 @@ void click(Button2 &btn)
 // long click
 void resetPosition(Button2 &btn)
 {
-  rotary.resetPosition();
   color_selected = false;
   rgb[0] = 0;
   rgb[1] = 0;
@@ -127,13 +141,11 @@ void resetPosition(Button2 &btn)
 
 void setup_encoder()
 {
-  rotary.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP, 0, 255, 0, 1);
-  rotary.enableSpeedup(true);
-  rotary.setChangedHandler(rotate);
-  //rotary.setLeftRotationHandler(showDirection);
-  //rotary.setRightRotationHandler(showDirection);
+  encoder = new RotaryEncoder(ROTARY_PIN1, ROTARY_PIN2, RotaryEncoder::LatchMode::TWO03);
+  attachInterrupt(digitalPinToInterrupt(ROTARY_PIN1), checkPosition, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(ROTARY_PIN2), checkPosition, CHANGE);
 
-  rotary_button.begin(BUTTON_PIN);
+  rotary_button.begin(ROTARY_BUTTON_PIN);
   rotary_button.setTapHandler(click);
   rotary_button.setLongClickHandler(resetPosition);
 }
@@ -228,8 +240,16 @@ void draw_body()
 
 void loop()
 {
-  rotary.loop();
   rotary_button.loop();
+
+  static int pos = 0;
+  encoder->tick(); // just call tick() to check the state.
+
+  int newPos = encoder->getPosition();
+  if (pos != newPos) {
+    pos = newPos;
+    handle_rotate(pos, encoder->getDirection());
+  }
 
   for (CRGB &pixel : leds)
   {
