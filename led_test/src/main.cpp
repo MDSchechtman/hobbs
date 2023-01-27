@@ -8,7 +8,10 @@
 #include <RotaryEncoder.h>
 
 // my stuff
-int current_color = 0; // 0 - R, 1 - G, 2 - B
+#define RED 0
+#define GREEN 1
+#define BLUE 2
+int current_color = RED; // 0 - R, 1 - G, 2 - B
 int rgb[] = {0, 0, 0};
 boolean color_selected = false;
 //
@@ -101,19 +104,22 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
     }
 
     // loop around
-    if (current_color > 2)
+    if (current_color > BLUE)
     {
-      current_color = 0;
+      current_color = RED;
     }
-    else if (current_color < 0)
+    else if (current_color < RED)
     {
-      current_color = 2;
+      current_color = BLUE;
     }
+
+    Serial.print(F("Current color: "));
+    Serial.println(current_color);
   }
   else
   {
     int delta = 1;
-    if (rpm > abs(200))
+    if (rpm > 200)
     {
       delta = 10;
     }
@@ -135,6 +141,9 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
     {
       rgb[current_color] = 0;
     }
+
+    Serial.print(F("Current color value: "));
+    Serial.println(rgb[current_color]);
   }
 }
 
@@ -148,9 +157,9 @@ void click(Button2 &btn)
 void resetPosition(Button2 &btn)
 {
   color_selected = false;
-  rgb[0] = 0;
-  rgb[1] = 0;
-  rgb[2] = 0;
+  rgb[RED] = 0;
+  rgb[GREEN] = 0;
+  rgb[BLUE] = 0;
 }
 
 void setup_encoder()
@@ -160,7 +169,7 @@ void setup_encoder()
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN2), checkPosition, CHANGE);
 
   rotary_button.begin(ROTARY_BUTTON_PIN);
-  rotary_button.setTapHandler(click);
+  rotary_button.setClickHandler(click);
   rotary_button.setLongClickHandler(resetPosition);
 }
 
@@ -174,13 +183,13 @@ void misc_button_click(Button2 &btn)
     current_color++;
 
     // loop around
-    if (current_color > 2)
+    if (current_color > BLUE)
     {
-      current_color = 0;
+      current_color = RED;
     }
-    else if (current_color < 0)
+    else if (current_color < RED)
     {
-      current_color = 2;
+      current_color = BLUE;
     }
   }
 }
@@ -193,7 +202,7 @@ void misc_button_long_click(Button2 &btn)
 void setup_misc_button()
 {
   misc_button.begin(MISC_BUTTON_PIN, INPUT_PULLUP);
-  misc_button.setTapHandler(misc_button_click);
+  misc_button.setClickHandler(misc_button_click);
   misc_button.setLongClickHandler(misc_button_long_click);
 }
 
@@ -218,11 +227,11 @@ void draw_header()
   display.setCursor(0, 0);
 
   display.print("(");
-  display.print(rgb[0]);
+  display.print(rgb[RED]);
   display.print(", ");
-  display.print(rgb[1]);
+  display.print(rgb[GREEN]);
   display.print(", ");
-  display.print(rgb[2]);
+  display.print(rgb[BLUE]);
   display.println(")");
 }
 
@@ -233,7 +242,7 @@ void draw_body()
   if (!color_selected)
   {
     display.setTextSize(1);
-    if (current_color == 0)
+    if (current_color == RED)
     {
       display.print(F("> "));
     }
@@ -243,7 +252,7 @@ void draw_body()
     }
     display.println(F("Red"));
 
-    if (current_color == 1)
+    if (current_color == GREEN)
     {
       display.print(F("> "));
     }
@@ -253,7 +262,7 @@ void draw_body()
     }
     display.println(F("Green"));
 
-    if (current_color == 2)
+    if (current_color == BLUE)
     {
       display.print(F("> "));
     }
@@ -270,15 +279,15 @@ void draw_body()
     {
     case 0:
       display.print(F("Red: "));
-      display.println(rgb[0]);
+      display.println(rgb[RED]);
       break;
     case 1:
       display.print(F("Green: "));
-      display.println(rgb[1]);
+      display.println(rgb[GREEN]);
       break;
     case 2:
       display.print(F("Blue: "));
-      display.println(rgb[2]);
+      display.println(rgb[BLUE]);
       break;
     default:
       break;
@@ -305,9 +314,9 @@ void loop()
 
   for (CRGB &pixel : leds)
   {
-    pixel.red = rgb[0];
-    pixel.green = rgb[1];
-    pixel.blue = rgb[2];
+    pixel.red = rgb[RED];
+    pixel.green = rgb[GREEN];
+    pixel.blue = rgb[BLUE];
   }
 
   FastLED.show();
@@ -317,6 +326,4 @@ void loop()
   draw_header();
   draw_body();
   display.display();
-
-  delay(1);
 }
