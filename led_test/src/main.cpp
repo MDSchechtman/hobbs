@@ -110,7 +110,7 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
   else 
   {
     int delta = 1;
-    if (rpm > 150) {
+    if (rpm > 200) {
       delta = 10;
     }
 
