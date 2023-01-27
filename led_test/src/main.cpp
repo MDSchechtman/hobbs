@@ -87,21 +87,30 @@ IRAM_ATTR void checkPosition()
 
 #endif
 
-void handle_rotate(int position, RotaryEncoder::Direction direction)
+void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
 {
   if (!color_selected)
   {
+    int delta = 1;
+    if (rpm > 150) {
+      delta = 10;
+    }
+
     if (direction == RotaryEncoder::Direction::CLOCKWISE)
     {
-      current_color++;
+      current_color += delta;
     }
     else if (direction == RotaryEncoder::Direction::COUNTERCLOCKWISE)
     {
-      current_color--;
+      current_color -= delta;
     }
 
     // loop around
-    current_color = current_color % 3; 
+    if (current_color > 2) {
+      current_color = 0;
+    } else if (current_color < 0) {
+      current_color = 2;
+    }
   }
   else 
   {
@@ -115,9 +124,9 @@ void handle_rotate(int position, RotaryEncoder::Direction direction)
     }
 
     if (rgb[current_color] > 255) {
-      rgb[current_color] = 255;
-    } else if (rgb[current_color] < 0) {
       rgb[current_color] = 0;
+    } else if (rgb[current_color] < 0) {
+      rgb[current_color] = 255;
     }
   }
 }
@@ -126,7 +135,6 @@ void handle_rotate(int position, RotaryEncoder::Direction direction)
 void click(Button2 &btn)
 {
   color_selected = !color_selected;
-  Serial.println(F("Click!"));
 }
 
 // long click
@@ -136,7 +144,6 @@ void resetPosition(Button2 &btn)
   rgb[0] = 0;
   rgb[1] = 0;
   rgb[2] = 0;
-  Serial.println(F("Reset!"));
 }
 
 void setup_encoder()
@@ -248,14 +255,16 @@ void loop()
   int newPos = encoder->getPosition();
   if (pos != newPos) {
     pos = newPos;
-    handle_rotate(pos, encoder->getDirection());
+    int rpm = encoder->getRPM();
+    Serial.println(rpm);
+    handle_rotate(pos, rpm, encoder->getDirection());
   }
 
   for (CRGB &pixel : leds)
   {
     pixel.red = rgb[0];
-    pixel.blue = rgb[1];
-    pixel.green = rgb[2];
+    pixel.green = rgb[1];
+    pixel.blue = rgb[2];
   }
 
   FastLED.show();
