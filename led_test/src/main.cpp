@@ -19,7 +19,7 @@ boolean color_selected = false;
 #define DATA_PIN 8
 // #define CLK_PIN 4
 #define VOLTS 5
-#define MAX_MA 1500
+#define MAX_MA 150
 
 CRGBArray<NUM_LEDS> leds;
 CRGB gBackgroundColor = CRGB::Black;
@@ -113,7 +113,7 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
   else
   {
     int delta = 1;
-    if (rpm > 200)
+    if (rpm > abs(200))
     {
       delta = 10;
     }
@@ -129,11 +129,11 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
 
     if (rgb[current_color] > 255)
     {
-      rgb[current_color] = 0;
+      rgb[current_color] = 255;
     }
     else if (rgb[current_color] < 0)
     {
-      rgb[current_color] = 255;
+      rgb[current_color] = 0;
     }
   }
 }
@@ -161,7 +161,7 @@ void setup_encoder()
 
   rotary_button.begin(ROTARY_BUTTON_PIN);
   rotary_button.setTapHandler(click);
-  rotary_button.setLongClickDetectedHandler(resetPosition);
+  rotary_button.setLongClickHandler(resetPosition);
 }
 
 #define MISC_BUTTON_PIN 10
@@ -169,7 +169,6 @@ Button2 misc_button;
 
 void misc_button_click(Button2 &btn)
 {
-  Serial.println(F("misc button click"));
   if (!color_selected)
   {
     current_color++;
@@ -195,7 +194,7 @@ void setup_misc_button()
 {
   misc_button.begin(MISC_BUTTON_PIN, INPUT_PULLUP);
   misc_button.setTapHandler(misc_button_click);
-  misc_button.setLongClickDetectedHandler(misc_button_long_click);
+  misc_button.setLongClickHandler(misc_button_long_click);
 }
 
 void setup()
@@ -299,8 +298,8 @@ void loop()
   if (pos != newPos)
   {
     pos = newPos;
+    Serial.println(pos);
     int rpm = encoder->getRPM();
-    Serial.println(rpm);
     handle_rotate(pos, rpm, encoder->getDirection());
   }
 
@@ -318,4 +317,6 @@ void loop()
   draw_header();
   draw_body();
   display.display();
+
+  delay(1);
 }
