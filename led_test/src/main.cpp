@@ -67,7 +67,7 @@ void setup_display()
 #define ROTARY_PIN1 11
 #define ROTARY_PIN2 12
 #define BUTTON_PIN 13
-#define CLICKS_PER_STEP 4
+#define CLICKS_PER_STEP 2
 ESPRotary rotary;
 Button2 rotary_button;
 
@@ -97,9 +97,6 @@ void rotate(ESPRotary &r)
     {
       rgb[current_color]--;
     }
-    
-    // loop around
-    rgb[current_color] = rgb[current_color] % 255;
   }
   Serial.println(r.getPosition());
 }
@@ -130,10 +127,11 @@ void resetPosition(Button2 &btn)
 
 void setup_encoder()
 {
-  rotary.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP);
+  rotary.begin(ROTARY_PIN1, ROTARY_PIN2, CLICKS_PER_STEP, 0, 255, 0, 1);
+  rotary.enableSpeedup(true);
   rotary.setChangedHandler(rotate);
-  rotary.setLeftRotationHandler(showDirection);
-  rotary.setRightRotationHandler(showDirection);
+  //rotary.setLeftRotationHandler(showDirection);
+  //rotary.setRightRotationHandler(showDirection);
 
   rotary_button.begin(BUTTON_PIN);
   rotary_button.setTapHandler(click);
@@ -156,24 +154,25 @@ void setup()
 
 void draw_header()
 {
+  display.setTextSize(1);
   display.setCursor(0, 0);
 
-  String rgb_text0 = "(";
-  String rgb_text1 = rgb_text0 + rgb[0];
-  String rgb_text2 = rgb_text1 + ", ";
-  String rgb_text3 = rgb_text2 + rgb[1];
-  String rgb_text4 = rgb_text3 + ", ";
-  String rgb_text5 = rgb_text4 + rgb[2];
-  String rgb_text6 = rgb_text5 + ")";
-  display.println(rgb_text6);
+  display.print("(");
+  display.print(rgb[0]);
+  display.print(", ");
+  display.print(rgb[1]);
+  display.print(", ");
+  display.print(rgb[2]);
+  display.println(")");  
 }
 
 void draw_body()
 {
-  display.setCursor(20, 0);
+  display.setCursor(0, 20);
 
   if (!color_selected)
   {
+    display.setTextSize(1);
     if (current_color == 0)
     {
       display.print(F("> "));
@@ -229,6 +228,9 @@ void draw_body()
 
 void loop()
 {
+  rotary.loop();
+  rotary_button.loop();
+
   for (CRGB &pixel : leds)
   {
     pixel.red = rgb[0];
@@ -243,6 +245,4 @@ void loop()
   draw_header();
   draw_body();
   display.display();
-
-  delay(100);
 }
