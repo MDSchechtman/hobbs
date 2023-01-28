@@ -4,8 +4,8 @@
 #include <Adafruit_SSD1306.h>
 #include "Button2.h"
 #include "FastLED.h"
+#include <Encoder.h>
 #include <Arduino.h>
-#include <RotaryEncoder.h>
 
 // my stuff
 #define RED 0
@@ -71,34 +71,17 @@ void setup_display()
 #define ROTARY_PIN2 3
 #define ROTARY_BUTTON_PIN 13
 Button2 rotary_button;
-RotaryEncoder *encoder = nullptr;
-#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_NANO_EVERY)
-// This interrupt routine will be called on any change of one of the input signals
-void checkPosition()
-{
-  encoder->tick(); // just call tick() to check the state.
-}
+Encoder encoder(2, 3);
 
-#elif defined(ESP8266)
-/**
- * @brief The interrupt service routine will be called on any change of one of the input signals.
- */
-IRAM_ATTR void checkPosition()
-{
-  encoder->tick(); // just call tick() to check the state.
-}
-
-#endif
-
-void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
+void handle_rotate(int position, int rpm, bool clockwise)
 {
   if (!color_selected)
   {
-    if (direction == RotaryEncoder::Direction::CLOCKWISE)
+    if (clockwise)
     {
       current_color++;
     }
-    else if (direction == RotaryEncoder::Direction::COUNTERCLOCKWISE)
+    else
     {
       current_color--;
     }
@@ -124,11 +107,11 @@ void handle_rotate(int position, int rpm, RotaryEncoder::Direction direction)
       delta = 10;
     }
 
-    if (direction == RotaryEncoder::Direction::CLOCKWISE)
+    if (clockwise)
     {
       rgb[current_color] += delta;
     }
-    else if (direction == RotaryEncoder::Direction::COUNTERCLOCKWISE)
+    else
     {
       rgb[current_color] -= delta;
     }
@@ -164,10 +147,6 @@ void resetPosition(Button2 &btn)
 
 void setup_encoder()
 {
-  encoder = new RotaryEncoder(ROTARY_PIN1, ROTARY_PIN2, RotaryEncoder::LatchMode::TWO03);
-  attachInterrupt(digitalPinToInterrupt(ROTARY_PIN1), checkPosition, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(ROTARY_PIN2), checkPosition, CHANGE);
-
   rotary_button.begin(ROTARY_BUTTON_PIN);
   rotary_button.setClickHandler(click);
   rotary_button.setLongClickHandler(resetPosition);
@@ -295,21 +274,17 @@ void draw_body()
   }
 }
 
+long current_position  = -999;
 void loop()
 {
   rotary_button.loop();
   misc_button.loop();
 
-  static int pos = 0;
-  encoder->tick(); // just call tick() to check the state.
-
-  int newPos = encoder->getPosition();
-  if (pos != newPos)
-  {
-    pos = newPos;
-    Serial.println(pos);
-    int rpm = encoder->getRPM();
-    handle_rotate(pos, rpm, encoder->getDirection());
+  long new_position = encoder.read();
+  if (new_position != current_position) {
+    int delta = new_position - current_position;
+    current_position = new_position;
+    handle_rotate(current_position, delta, delta > 0);
   }
 
   for (CRGB &pixel : leds)
