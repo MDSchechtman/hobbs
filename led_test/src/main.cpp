@@ -289,13 +289,7 @@ void loop()
   if (new_position != last_position) {
     int delta = new_position - last_position;
     last_position = new_position;
-
-    long current_time = millis();
-    int rpm = get_rpm(current_time, last_time);
-    last_time = current_time;
-    Serial.println(rpm);
-
-    handle_rotate(last_position, rpm, delta > 0);
+    handle_rotate(last_position, 0, delta > 0);
   }
 
   for (CRGB &pixel : leds)
